@@ -1,0 +1,69 @@
+version: "3.8"
+
+services:
+  db-test:    
+    image: mongo:4.4
+    restart: always
+    container_name: "${DATABASE_HOST}-test"
+    hostname: "${DATABASE_HOST}-test"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
+      MONGO_INITDB_DATABASE: "${MONGO_DB}"
+    networks:
+      ms-users-test:
+    healthcheck:
+      test: ["CMD","mongo"]
+      interval: 2s
+      retries: 5
+      start_period: 2s      
+      timeout: 2s
+
+  ms-users-test:
+    image: "${HOST}-test"
+    build: 
+      context: .
+      dockerfile: "Dockerfile.api.test"
+    container_name: "${HOST}-test"
+    hostname: "${HOST}-test"
+    depends_on:
+      db-test:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: "${DATABASE_HOST}-test"
+      DATABASE_PORT: "${DATABASE_PORT}"
+      MONGO_USER: "${MONGO_USER}"
+      MONGO_PASSWORD: "${MONGO_PASSWORD}"
+      MONGO_DB: "${MONGO_DB}"
+      MONGO_COLLECTION: "${MONGO_COLLECTION}"
+      HOST: "${HOST}-test"
+      PORT: "${PORT}"
+    healthcheck:
+      test: ["CMD","curl","-X","GET","http://${HOST}-test:${PORT}/users"]
+      interval: 2s
+      retries: 5
+      start_period: 2s      
+      timeout: 2s
+    networks:
+      ms-users-test:
+      
+  test:
+    image: ms-users/test
+    build: 
+      context: .
+      dockerfile: "Dockerfile.test"
+    container_name: "ms-users-test"
+    hostname: "ms-users-test"
+    depends_on:
+      ms-users-test:
+        condition: service_healthy
+    environment:
+      HOST: "${HOST}-test"
+      PORT: "${PORT}"
+    networks:
+      ms-users-test:
+
+networks:
+  ms-users-test:
+    name: ms-users-test-net
+    driver: bridge

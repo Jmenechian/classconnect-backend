@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: "postgres"
+    restart: "on-failure:3"
+    hostname: "${DATABASE_HOST}"
+    environment:
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+      POSTGRES_DB: "${DATABASE_NAME}"
+    volumes:
+      - "${ENVIRONMENT}/db/" 
+    networks:
+      ClassConnect:
+    healthcheck:
+      test: ["CMD-SHELL","su","postgres","psql"]
+      interval: 2s
+      retries: 5
+      start_period: 2s      
+      timeout: 2s
+
+  api:
+    build: "."
+    hostname: "${HOST}"
+    image: "${HOST}-ms-courses"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "on-failure:3"
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      DB_USERNAME: "${DATABASE_USER}"
+      DB_PASSWORD: "${DATABASE_PASSWORD}"
+      DB_URL: "${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}"
+      PORT: "${PORT}"
+      ENVIRONMENT: "${ENVIRONMENT}"
+      DEV_USERS_URL: "${DEV_USERS_URL}"
+      TESTING: "true"
+      MS_USERS_URL: "${MS_USERS_URL}" 
+      NOTIF: "boca" 
+    networks:
+      - ClassConnect
+      - shared
+
+networks:
+  ClassConnect:
+    name: "ClassConnect-net"
+    driver: bridge
+  shared:
+    external: true
+    name: ms-users-net

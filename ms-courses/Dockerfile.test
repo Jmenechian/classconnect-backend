@@ -1,0 +1,8 @@
+FROM python:alpine
+
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN pip install -r requirements.txt
+CMD [ "pytest", "--cov=.", "--cov-report=term-missing", "-v", "test_courses.py" ]

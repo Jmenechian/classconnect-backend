@@ -1,0 +1,52 @@
+services:
+  db:    
+    image: mongo:4.4
+    restart: always
+    container_name: "${DATABASE_HOST}"
+    hostname: "${DATABASE_HOST}"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
+      MONGO_INITDB_DATABASE: "${MONGO_DB}"
+    networks:
+      ms-users:
+    healthcheck:
+      test: ["CMD","mongo"]
+      interval: 2s
+      retries: 5
+      start_period: 2s      
+      timeout: 2s
+    volumes:
+      - mongodb:/data/db
+
+  ms-users:
+    build: .
+    image: "${HOST}"
+    container_name: "${HOST}"
+    hostname: "${HOST}"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: "${DATABASE_HOST}"
+      DATABASE_PORT: "${DATABASE_PORT}"
+      MONGO_USER: "${MONGO_USER}"
+      MONGO_PASSWORD: "${MONGO_PASSWORD}"
+      MONGO_DB: "${MONGO_DB}"
+      MONGO_COLLECTION: "${MONGO_COLLECTION}"
+      GOOGLE_APPLICATION_CREDENTIALS: "/app/authKey.json"
+      HOST: "${HOST}"
+      PORT: "${PORT}"
+      BREVO_KEY: "${BREVO_KEY}"
+      BREVO_EMAIL: "${BREVO_EMAIL}"
+    ports:
+      - "${PORT}:${PORT}"
+    networks:
+      ms-users:
+
+networks:
+  ms-users:
+    name: ms-users-net
+    driver: bridge
+volumes:
+  mongodb:
