@@ -19,14 +19,14 @@ El proyecto se puede correr enteramente desde docker. Por lo tanto, el único re
 ## Testeo
 
 ```
-docker-compose --env-file .env.prod -f docker-compose.test.yml up -d --build
+docker-compose --env-file .env -f docker-compose.test.yml up -d --build
 ```
 
 ## Instrucciones de ejecución
 
 Para levantar el proyecto, solo se debe correr el siguiente comando en el directorio principal:
 ```
-docker compose --env-file .env.prod up -d --build
+docker compose --env-file .env up -d --build
 ```
 
 ## Pendientes:
